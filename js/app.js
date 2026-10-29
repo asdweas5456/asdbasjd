@@ -159,13 +159,15 @@
   const msHead = x => `<div class="ms-h"><span class="ms-id">${esc(x.id)}</span><h2>${esc(x.t)}</h2>${x.ai ? '<span class="ess ai" title="Esta sesión la completó Claude: no viene del curso original">✦ completado por Claude</span>' : ""}</div>`;
   const modLessons = l => flat().filter(x => !x.isMod && x.mod.n === l.mod.n);
   // ---------- videos de YouTube incrustados (solo en la versión web propia: window.VIDEO_EMBED) ----------
-  const ytId = u => { u = String(u || "").trim(); let m = u.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/); if (m) return m[1]; return /^[\w-]{11}$/.test(u) ? u : ""; };
+  const ytId = u => { u = String(u || "").trim(); let m = u.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/); if (m) return m[1]; m = u.match(/^([\w-]{11})(?:[?&]|$)/); return m ? m[1] : ""; };
   const ytStart = u => { const m = String(u || "").match(/[?&](?:t|start)=(\d+)/); return m ? m[1] : ""; };
+  const ytEnd = u => { const m = String(u || "").match(/[?&]end=(\d+)/); return m ? m[1] : ""; };
+  const mmss = s => { s = +s; const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(x).padStart(2, "0"); };
   // key = "curso:id" (sesion) o "curso:m<n>" (modulo). Un valor guardado por el alumno manda sobre el de VIDEOS; "" = sin video.
   function vidBoxK(key, label) {
     if (!window.VIDEO_EMBED) return "";
     const sv = (P.vids || {})[key], u = sv !== undefined ? sv : (window.VIDEOS || {})[key], id = ytId(u);
-    if (id) { const st = ytStart(u); return `<div class="vidbox"><div class="vid-fr"><iframe src="https://www.youtube-nocookie.com/embed/${id}${st ? "?start=" + st : ""}" title="${esc(label)}" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe></div><div class="vid-row"><span class="vid-l">${esc(label)}</span><a class="vl-link" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener">Abrir en YouTube</a><button class="vl-link" data-act="vidrm" data-key="${esc(key)}">Cambiar o quitar video</button></div></div>`; }
+    if (id) { const st = ytStart(u), en = ytEnd(u); const q = [st ? "start=" + st : "", en ? "end=" + en : ""].filter(Boolean).join("&"); const seg = st || en ? "Minuto " + mmss(st || 0) + (en ? " a " + mmss(en) : " hasta el final") : ""; return `<div class="vidbox"><div class="vid-fr"><iframe src="https://www.youtube-nocookie.com/embed/${id}${q ? "?" + q : ""}" title="${esc(label)}" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe></div><div class="vid-row"><span class="vid-l">${esc(label)}${seg ? " · <b>" + seg + "</b>" : ""}</span><a class="vl-link" href="https://www.youtube.com/watch?v=${id}${st ? "&t=" + st + "s" : ""}" target="_blank" rel="noopener">Abrir en YouTube</a><button class="vl-link" data-act="vidrm" data-key="${esc(key)}">Cambiar o quitar video</button></div></div>`; }
     return `<div class="vidbox add"><input class="vid-in" data-vid="${esc(key)}" placeholder="Pega aquí el link de YouTube (${esc(label)})" aria-label="Link de YouTube"><button class="btn btn-2" data-act="vidadd" data-key="${esc(key)}">Agregar video</button></div>`;
   }
   const vidBox = l => vidBoxK(cid + ":" + l.id, "Video de la sesión " + l.id);
