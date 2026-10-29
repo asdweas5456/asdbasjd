@@ -161,15 +161,18 @@
   // ---------- videos de YouTube incrustados (solo en la versión web propia: window.VIDEO_EMBED) ----------
   const ytId = u => { u = String(u || "").trim(); let m = u.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/); if (m) return m[1]; return /^[\w-]{11}$/.test(u) ? u : ""; };
   const ytStart = u => { const m = String(u || "").match(/[?&](?:t|start)=(\d+)/); return m ? m[1] : ""; };
-  function vidBox(l) {
+  // key = "curso:id" (sesion) o "curso:m<n>" (modulo). Un valor guardado por el alumno manda sobre el de VIDEOS; "" = sin video.
+  function vidBoxK(key, label) {
     if (!window.VIDEO_EMBED) return "";
-    const key = cid + ":" + l.id, u = (P.vids || {})[key], id = ytId(u);
-    if (id) { const st = ytStart(u); return `<div class="vidbox"><div class="vid-fr"><iframe src="https://www.youtube-nocookie.com/embed/${id}${st ? "?start=" + st : ""}" title="Video de la sesión ${esc(l.id)}" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe></div><button class="vl-link" data-act="vidrm" data-id="${esc(l.id)}">Quitar video</button></div>`; }
-    return `<div class="vidbox add"><input class="vid-in" data-vid="${esc(l.id)}" placeholder="Pega aquí el link de YouTube de esta sesión" aria-label="Link de YouTube"><button class="btn btn-2" data-act="vidadd" data-id="${esc(l.id)}">Agregar video</button></div>`;
+    const sv = (P.vids || {})[key], u = sv !== undefined ? sv : (window.VIDEOS || {})[key], id = ytId(u);
+    if (id) { const st = ytStart(u); return `<div class="vidbox"><div class="vid-fr"><iframe src="https://www.youtube-nocookie.com/embed/${id}${st ? "?start=" + st : ""}" title="${esc(label)}" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe></div><div class="vid-row"><span class="vid-l">${esc(label)}</span><a class="vl-link" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener">Abrir en YouTube</a><button class="vl-link" data-act="vidrm" data-key="${esc(key)}">Cambiar o quitar video</button></div></div>`; }
+    return `<div class="vidbox add"><input class="vid-in" data-vid="${esc(key)}" placeholder="Pega aquí el link de YouTube (${esc(label)})" aria-label="Link de YouTube"><button class="btn btn-2" data-act="vidadd" data-key="${esc(key)}">Agregar video</button></div>`;
   }
+  const vidBox = l => vidBoxK(cid + ":" + l.id, "Video de la sesión " + l.id);
+  const vidMod = l => l.mod ? vidBoxK(cid + ":m" + l.mod.n, "Video del módulo " + l.mod.n) : "";
   function viewModScroll(l) {
     const cta = x => { const lc = labState(x).filter(Boolean).length; const b = []; if (x.lab.length) b.push(`<button class="btn" data-act="lt" data-id="${x.id}" data-t="lab">${ic("term")} ${x.vlab ? "Laboratorio" : "Terminal"} de ${esc(x.id)} <small>${lc}/${x.lab.length}</small></button>`); if (x.quiz.length) b.push(`<button class="btn btn-2" data-act="lt" data-id="${x.id}" data-t="quiz">Autoevaluación de ${esc(x.id)}</button>`); return b.length ? `<div class="cta">${b.join("")}</div>` : ""; };
-    return `<div class="wrap dxwrap"><p class="ms-top">Módulo ${l.mod.n} · ${esc(l.mod.title)}. Todo el módulo está en esta página: desliza hacia abajo, o toca una sesión del panel izquierdo para ir directo a ella.</p>${modLessons(l).map(x => `<section class="ms" id="ms-${x.id}" data-ms="${x.id}">${msHead(x)}${x.slides ? x.slides.map(sl => `<div class="dnsx stk"><div class="dx-scroll"><div class="dx-slide active">${sl}</div></div></div>`).join("") : `${vidBox(x)}<article class="sum">${mdStudy(x.sum)}</article>`}${cta(x)}</section>`).join("")}</div>`;
+    return `<div class="wrap dxwrap">${vidMod(l)}<p class="ms-top">Módulo ${l.mod.n} · ${esc(l.mod.title)}. Todo el módulo está en esta página: desliza hacia abajo, o toca una sesión del panel izquierdo para ir directo a ella.</p>${modLessons(l).map(x => `<section class="ms" id="ms-${x.id}" data-ms="${x.id}">${msHead(x)}${x.slides ? x.slides.map(sl => `<div class="dnsx stk"><div class="dx-scroll"><div class="dx-slide active">${sl}</div></div></div>`).join("") : `${vidBox(x)}<article class="sum">${mdStudy(x.sum)}</article>`}${cta(x)}</section>`).join("")}</div>`;
   }
   function viewTeoria(l) {
     if (course().scroll && !l.isMod) return viewModScroll(l);
@@ -695,8 +698,8 @@
     switch (d.act) {
       case "sp": S.sp = d.k; P.sp = d.k; if (d.k === "anki") { S._built = false; S.queue = []; } render(false); break;
       case "tab": S.tab = d.t; if (d.t === "anki") { S._built = false; S.queue = []; } render(false); break;
-      case "vidadd": { const i = document.querySelector('.vid-in[data-vid="' + d.id + '"]'); const v = i ? i.value : ""; if (ytId(v)) { P.vids = P.vids || {}; P.vids[cid + ":" + d.id] = v.trim(); save(); render(true); } else if (i) { i.value = ""; i.placeholder = "Ese link no parece de YouTube. Pégalo de nuevo."; } break; }
-      case "vidrm": if (P.vids) { delete P.vids[cid + ":" + d.id]; save(); render(true); } break;
+      case "vidadd": { const i = document.querySelector('.vid-in[data-vid="' + d.key + '"]'); const v = i ? i.value : ""; if (ytId(v)) { P.vids = P.vids || {}; P.vids[d.key] = v.trim(); save(); render(true); } else if (i) { i.value = ""; i.placeholder = "Ese link no parece de YouTube. Pégalo de nuevo."; } break; }
+      case "vidrm": P.vids = P.vids || {}; P.vids[d.key] = ""; save(); render(true); break;
       case "lesson": go(d.id); break;
       case "lt": go(d.id, d.t); break;
       case "uplvl": upGen(); break;
