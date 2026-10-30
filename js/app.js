@@ -167,6 +167,11 @@
   function vidBoxK(key, label) {
     if (!window.VIDEO_EMBED) return "";
     const sv = (P.vids || {})[key], u = sv !== undefined ? sv : (window.VIDEOS || {})[key], id = ytId(u);
+    // Video propio (prototipo): ruta local a un .mp4/.webm, p. ej. "assets/videos/vpc-1-1.mp4"
+    if (/^(?!https?:)[\w./-]+\.(mp4|webm)$/i.test(String(u || "").trim())) {
+      const src = esc(String(u).trim());
+      return `<div class="vidbox"><div class="vid-fr"><video controls preload="metadata" playsinline src="${src}" title="${esc(label)}" style="position:absolute;inset:0;width:100%;height:100%;background:#000"></video></div><div class="vid-row"><span class="vid-l">${esc(label)} · <b>Clase grabada (prototipo)</b></span><button class="vl-link" data-act="vidrm" data-key="${esc(key)}">Cambiar o quitar video</button></div></div>`;
+    }
     if (id) { const st = ytStart(u), en = ytEnd(u); const q = [st ? "start=" + st : "", en ? "end=" + en : ""].filter(Boolean).join("&"); const seg = st || en ? "Minuto " + mmss(st || 0) + (en ? " a " + mmss(en) : " hasta el final") : ""; return `<div class="vidbox"><div class="vid-fr"><iframe src="https://www.youtube-nocookie.com/embed/${id}${q ? "?" + q : ""}" title="${esc(label)}" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe></div><div class="vid-row"><span class="vid-l">${esc(label)}${seg ? " · <b>" + seg + "</b>" : ""}</span><a class="vl-link" href="https://www.youtube.com/watch?v=${id}${st ? "&t=" + st + "s" : ""}" target="_blank" rel="noopener">Abrir en YouTube</a><button class="vl-link" data-act="vidrm" data-key="${esc(key)}">Cambiar o quitar video</button></div></div>`; }
     return `<div class="vidbox add"><input class="vid-in" data-vid="${esc(key)}" placeholder="Pega aquí el link de YouTube (${esc(label)})" aria-label="Link de YouTube"><button class="btn btn-2" data-act="vidadd" data-key="${esc(key)}">Agregar video</button></div>`;
   }

@@ -11,6 +11,10 @@ window.VIDEOS = {
   // Networking para DevOps
   "net:m1": "iNh-62Mf0O4", "net:m2": "SJlUHN0RNAI", "net:m3": "yeaLwrJ0mdw?start=58", "net:m4": "LkcTF8BYVTU", "net:m5": "PXCWiW1K0Ro",
   // AWS VPC
+  // Prototipo: cortes de la clase grabada, uno por sesión (archivos locales en assets/videos/, no se suben al repo público)
+  "vpc:1.1": "assets/videos/vpc-1-1.mp4", "vpc:1.2": "assets/videos/vpc-1-2.mp4", "vpc:1.3": "assets/videos/vpc-1-3.mp4",
+  "vpc:2.1": "assets/videos/vpc-2-1.mp4", "vpc:2.2": "assets/videos/vpc-2-2.mp4", "vpc:2.3": "assets/videos/vpc-2-3.mp4",
+  "vpc:3.1": "assets/videos/vpc-3-1.mp4",
   "vpc:m1": "f_zZVvlhXyA", "vpc:m2": "6kQoCssJ5zM", "vpc:m3": "sgKrFLSmF7Q", "vpc:m4": "35zd1FAMrjA",
   "vpc:m5": "bDTByc0XwUE", "vpc:m6": "gF5zOyorKus",
   // Docker de Cero a Producción
